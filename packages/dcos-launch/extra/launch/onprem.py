@@ -6,6 +6,7 @@ import retrying
 import yaml
 
 import launch.aws
+import launch.gce
 import launch.util
 
 import test_util.aws
@@ -41,6 +42,8 @@ class OnpremLauncher(launch.util.AbstractLauncher):
     def get_bare_cluster_launcher(self):
         if self.config['platform'] == 'aws':
             return launch.aws.BareClusterLauncher(self.config)
+        elif self.config['platform'] == 'gce':
+            return launch.gce.BareClusterLauncher(self.config)
         else:
             raise launch.util.LauncherError('Platform currently not supported for onprem: {}'.format(
                 self.config['platform']))
