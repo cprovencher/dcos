@@ -161,6 +161,14 @@ if [[ ! -z $identity_file ]]; then
 fi
 
 nodes_info_json=$(./dcos-cli $debug_options node --json)
+echo FIRST NODES INFO
+echo $nodes_info_json
+echo SEPARATOR
+nodes_info_json=$(./dcos-cli node --json)
+echo SECOND NODES INFO
+echo $nodes_info_json
+echo NODES INFO DONE
+
 for node_info in $(echo "$nodes_info_json" | jq -r '.[] | @base64'); do
   _jq() {
    echo "$node_info" | base64 --decode | jq -r ${1}
