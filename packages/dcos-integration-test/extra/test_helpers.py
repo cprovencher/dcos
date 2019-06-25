@@ -1,6 +1,7 @@
 import copy
 import json
 import logging
+import os
 import subprocess
 import uuid
 
@@ -32,7 +33,8 @@ def get_exhibitor_admin_password():
 def get_expanded_config():
     # make the expanded config available at import time to allow determining
     # which tests should run before the test suite kicks off
-    with open('/opt/mesosphere/etc/expanded.config.json', 'r') as f:
+    config_path = os.getenv('DCOS_EXPANDED_CONFIG_PATH', '/opt/mesosphere/etc/expanded.config.json')
+    with open(config_path, 'r') as f:
         expanded_config = json.load(f)
         # expanded.config.json doesn't contain secret values, so we need to read the Exhibitor admin password from
         # Exhibitor's config.
