@@ -6,7 +6,6 @@ import subprocess
 
 import dns.exception
 import dns.resolver
-import kazoo.client
 import pytest
 import requests
 
@@ -51,7 +50,7 @@ def test_dcos_cluster_is_up(dcos_api_session):
 def test_leader_election(dcos_api_session):
     mesos_resolver = dns.resolver.Resolver()
     mesos_resolver.nameservers = dcos_api_session.masters
-    mesos_resolver.port = 61053
+    mesos_resolver.port = 53
     try:
         mesos_resolver.query('leader.mesos', 'A')
     except dns.exception.DNSException:
@@ -61,20 +60,10 @@ def test_leader_election(dcos_api_session):
 @pytest.mark.supportedwindows
 def test_if_all_mesos_masters_have_registered(dcos_api_session):
     # Currently it is not possible to extract this information through Mesos'es
-    # API, let's query zookeeper directly.
-    zk_hostports = 'zk-1.zk:2181,zk-2.zk:2181,zk-3.zk:2181,zk-4.zk:2181,zk-5.zk:2181'
-    zk = kazoo.client.KazooClient(hosts=zk_hostports, read_only=True)
-    master_ips = []
-
-    zk.start()
-    for znode in zk.get_children("/mesos"):
-        if not znode.startswith("json.info_"):
-            continue
-        master = json.loads(zk.get("/mesos/" + znode)[0].decode('utf-8'))
-        master_ips.append(master['address']['ip'])
-    zk.stop()
-
-    assert sorted(master_ips) == dcos_api_session.masters
+    # API, let's query zookeeper through exhibitor instead.
+    r = dcos_api_session.get('/exhibitor/exhibitor/v1/cluster/status')
+    assert r.status_code == 200
+    assert len(r.json()) == len(dcos_api_session.masters)
 
 
 @pytest.mark.supportedwindows
